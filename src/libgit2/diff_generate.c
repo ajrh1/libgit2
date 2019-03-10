@@ -1356,6 +1356,14 @@ static int diff_prepare_iterator_opts(char **prefix, git_iterator_options *a, in
 	a->start = b->start = *prefix;
 	a->end = b->end = *prefix;
 
+	if (opts && opts->range_start && *opts->range_start &&
+			(!*prefix || !**prefix || strcmp(opts->range_start, *prefix) > 0))
+		a->start = b->start = opts->range_start;
+
+	if (opts && opts->range_end && *opts->range_end &&
+			(!*prefix || !**prefix || strcmp(opts->range_end, *prefix) < 0))
+		a->end = b->end = opts->range_end;
+
 	return 0;
 }
 
@@ -1474,6 +1482,7 @@ int git_diff_index_to_workdir(
 	git_diff *diff = NULL;
 	char *prefix = NULL;
 	int error = 0;
+	unsigned int dflags = GIT_ITERATOR_DONT_AUTOEXPAND;
 
 	GIT_ASSERT_ARG(out);
 	GIT_ASSERT_ARG(repo);
@@ -1483,8 +1492,15 @@ int git_diff_index_to_workdir(
 	if (!index && (error = diff_load_index(&index, repo)) < 0)
 		return error;
 
+	/* checking ignore rules is expensive, so we turn it on only if it
+	 * can make a difference */
+	if (opts && opts->flags &
+			(GIT_DIFF_INCLUDE_IGNORED | GIT_DIFF_INCLUDE_UNTRACKED | GIT_DIFF_RECURSE_UNTRACKED_DIRS |
+			 GIT_DIFF_RECURSE_IGNORED_DIRS | GIT_DIFF_ENABLE_FAST_UNTRACKED_DIRS))
+		dflags |= GIT_ITERATOR_HONOR_IGNORES;
+
 	if ((error = diff_prepare_iterator_opts(&prefix, &a_opts, GIT_ITERATOR_INCLUDE_CONFLICTS,
-						&b_opts, GIT_ITERATOR_DONT_AUTOEXPAND, opts)) < 0 ||
+					&b_opts, dflags, opts)) < 0 ||
 	    (error = git_iterator_for_index(&a, repo, index, &a_opts)) < 0 ||
 	    (error = git_iterator_for_workdir(&b, repo, index, NULL, &b_opts)) < 0 ||
 	    (error = git_diff__from_iterators(&diff, repo, a, b, opts)) < 0)
@@ -1525,7 +1541,7 @@ int git_diff_tree_to_workdir(
 	*out = NULL;
 
 	if ((error = diff_prepare_iterator_opts(&prefix, &a_opts, 0,
-						&b_opts, GIT_ITERATOR_DONT_AUTOEXPAND, opts) < 0) ||
+					&b_opts, GIT_ITERATOR_DONT_AUTOEXPAND | GIT_ITERATOR_HONOR_IGNORES, opts) < 0) ||
 	    (error = git_repository_index__weakptr(&index, repo)) < 0 ||
 	    (error = git_iterator_for_tree(&a, old_tree, &a_opts)) < 0 ||
 	    (error = git_iterator_for_workdir(&b, repo, index, old_tree, &b_opts)) < 0 ||
