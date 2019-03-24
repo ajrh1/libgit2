@@ -50,10 +50,13 @@ typedef struct {
 
 void git_config_entry_free(git_config_entry *entry)
 {
+	void (*free)(struct git_config_entry *);
+
 	if (!entry)
 		return;
 
-	entry->free(entry);
+	__atomic_load(&entry->free, &free, __ATOMIC_RELAXED);
+	free(entry);
 }
 
 static void backend_instance_free(backend_instance *instance)
