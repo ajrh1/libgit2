@@ -269,10 +269,12 @@ static int packfile_load__cb(void *data, git_str *path)
 
 static int pack_entry_find(struct git_pack_entry *e, struct pack_backend *backend, const git_oid *oid)
 {
-	struct git_pack_file *last_found = backend->last_found, *p;
+	struct git_pack_file *last_found, *p;
 	git_midx_entry midx_entry;
 	size_t oid_hexsize = git_oid_hexsize(backend->opts.oid_type);
 	size_t i;
+
+	__atomic_load(&backend->last_found, &last_found, __ATOMIC_ACQUIRE);
 
 	if (backend->midx &&
 		git_midx_entry_find(&midx_entry, backend->midx, oid, oid_hexsize) == 0 &&
@@ -292,7 +294,7 @@ static int pack_entry_find(struct git_pack_entry *e, struct pack_backend *backen
 			continue;
 
 		if (git_pack_entry_find(e, p, oid, oid_hexsize) == 0) {
-			backend->last_found = p;
+			__atomic_store(&backend->last_found, &p, __ATOMIC_RELEASE);
 			return 0;
 		}
 	}
@@ -311,7 +313,7 @@ static int pack_entry_find_prefix(
 	size_t i;
 	git_oid found_full_oid;
 	bool found = false;
-	struct git_pack_file *last_found = backend->last_found, *p;
+	struct git_pack_file *last_found, *p;
 	git_midx_entry midx_entry;
 
 #ifdef GIT_EXPERIMENTAL_SHA256
@@ -319,6 +321,8 @@ static int pack_entry_find_prefix(
 #else
 	git_oid_clear(&found_full_oid, GIT_OID_SHA1);
 #endif
+
+	__atomic_load(&backend->last_found, &last_found, __ATOMIC_ACQUIRE);
 
 	if (backend->midx) {
 		error = git_midx_entry_find(&midx_entry, backend->midx, short_oid, len);
@@ -357,7 +361,7 @@ static int pack_entry_find_prefix(
 				return git_odb__error_ambiguous("found multiple pack entries");
 			git_oid_cpy(&found_full_oid, &e->id);
 			found = true;
-			backend->last_found = p;
+			__atomic_store(&backend->last_found, &p, __ATOMIC_RELEASE);
 		}
 	}
 
