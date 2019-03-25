@@ -316,6 +316,9 @@ bool git_path_str_is_valid(
 {
 	repository_path_validate_data data = {0};
 
+	if (flags == 0)
+	    return true;
+
 	/* Upgrade the ".git" checks based on platform */
 	if ((flags & GIT_PATH_REJECT_DOT_GIT))
 		flags = dotgit_flags(repo, flags);
