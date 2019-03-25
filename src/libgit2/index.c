@@ -32,6 +32,8 @@ static int index_apply_to_wd_diff(git_index *index, int action, const git_strarr
 				  unsigned int flags,
 				  git_index_matched_path_cb cb, void *payload);
 
+bool git_index_disable_checksum_verification = false;
+
 static const size_t INDEX_HEADER_SIZE = 12;
 
 static const unsigned int INDEX_VERSION_NUMBER_DEFAULT = 2;
@@ -2776,12 +2778,14 @@ static int parse_index(git_index *index, const char *buffer, size_t buffer_size)
 	if (buffer_size < INDEX_HEADER_SIZE + checksum_size)
 		return index_error_invalid("insufficient buffer space");
 
-	/*
-	 * Precalculate the hash of the files's contents -- we'll match
-	 * it to the provided checksum in the footer.
-	 */
-	git_hash_buf(checksum, buffer, buffer_size - checksum_size,
-		git_oid_algorithm(index->oid_type));
+	if (!git_index_disable_checksum_verification) {
+		/*
+		* Precalculate the hash of the files's contents -- we'll match
+		* it to the provided checksum in the footer.
+		*/
+		git_hash_buf(checksum, buffer, buffer_size - checksum_size,
+			git_oid_algorithm(index->oid_type));
+	}
 
 	/* Parse header */
 	if ((error = read_header(&header, buffer)) < 0)
@@ -2853,14 +2857,16 @@ static int parse_index(git_index *index, const char *buffer, size_t buffer_size)
 	 * Note: checksum may be 0 if the index was written by a client
 	 * where index.skipHash was set to true.
 	 */
-	if (memcmp(zero_checksum, buffer, checksum_size) != 0 &&
-	    memcmp(checksum, buffer, checksum_size) != 0) {
+	if (!git_index_disable_checksum_verification) {
+		if (memcmp(zero_checksum, buffer, checksum_size) != 0 &&
+		    memcmp(checksum, buffer, checksum_size) != 0) {
 		error = index_error_invalid(
 			"calculated checksum does not match expected");
 		goto done;
+	    }
 	}
 
-	memcpy(index->checksum, checksum, checksum_size);
+memcpy(index->checksum, buffer, checksum_size);
 
 #undef seek_forward
 
