@@ -124,6 +124,8 @@ struct reuc_entry_internal {
 };
 
 bool git_index__enforce_unsaved_safety = false;
+bool git_index__disable_checksum_verification = false;
+bool git_index__disable_filepath_validation = false;
 
 /* local declarations */
 static int read_extension(size_t *read_len, git_index *index, size_t checksum_size, const char *buffer, size_t buffer_size);
@@ -2680,7 +2682,7 @@ static int read_entry(
 
 	if (index_entry_create(
 				out, INDEX_OWNER(index), entry.path, NULL,
-				git_index_disable_path_validation ? 0 : GIT_PATH_REJECT_INDEX_DEFAULTS) < 0) {
+				git_index__disable_filepath_validation ? 0 : GIT_PATH_REJECT_INDEX_DEFAULTS) < 0) {
 		git__free(tmp_path);
 		return -1;
 	}
