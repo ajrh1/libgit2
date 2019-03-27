@@ -196,6 +196,12 @@ static void pack_index_free(struct git_pack_file *p)
 	}
 }
 
+static int load_acquire(int* p) {
+	int res;
+	__atomic_load(p, &res, __ATOMIC_ACQUIRE);
+	return res;
+}
+
 /* Run with the packfile lock held */
 static int pack_index_check_locked(const char *path, struct git_pack_file *p)
 {
@@ -299,7 +305,7 @@ static int pack_index_check_locked(const char *path, struct git_pack_file *p)
 	}
 
 	p->num_objects = nr;
-	p->index_version = version;
+	__atomic_store(&p->index_version, &version, __ATOMIC_RELEASE);
 	return 0;
 }
 
@@ -310,7 +316,7 @@ static int pack_index_open_locked(struct git_pack_file *p)
 	size_t name_len;
 	git_str idx_name = GIT_STR_INIT;
 
-	if (p->index_version > -1)
+	if (load_acquire(&p->index_version) > -1)
 		goto cleanup;
 
 	/* checked by git_pack_file alloc */
@@ -327,7 +333,7 @@ static int pack_index_open_locked(struct git_pack_file *p)
 		goto cleanup;
 	}
 
-	if (p->index_version == -1)
+	if (load_acquire(&p->index_version) == -1)
 		error = pack_index_check_locked(idx_name.ptr, p);
 
 cleanup:
@@ -1082,6 +1088,7 @@ void git_packfile_free(struct git_pack_file *p, bool unlink_packfile)
 /* Run with the packfile and mwf locks held */
 static int packfile_open_locked(struct git_pack_file *p)
 {
+	int fd = -1;
 	struct stat st;
 	struct git_pack_header hdr;
 	unsigned char checksum[GIT_OID_MAX_SIZE];
@@ -1094,11 +1101,11 @@ static int packfile_open_locked(struct git_pack_file *p)
 		return 0;
 
 	/* TODO: open with noatime */
-	p->mwf.fd = git_futils_open_ro(p->pack_name);
-	if (p->mwf.fd < 0)
+	fd = git_futils_open_ro(p->pack_name);
+	if (fd < 0)
 		goto cleanup;
 
-	if (p_fstat(p->mwf.fd, &st) < 0) {
+	if (p_fstat(fd, &st) < 0) {
 		git_error_set(GIT_ERROR_OS, "could not stat packfile");
 		goto cleanup;
 	}
@@ -1115,7 +1122,7 @@ static int packfile_open_locked(struct git_pack_file *p)
 	/* We leave these file descriptors open with sliding mmap;
 	 * there is no point keeping them open across exec(), though.
 	 */
-	fd_flag = fcntl(p->mwf.fd, F_GETFD, 0);
+	fd_flag = fcntl(fd, F_GETFD, 0);
 	if (fd_flag < 0)
 		goto cleanup;
 
@@ -1125,14 +1132,14 @@ static int packfile_open_locked(struct git_pack_file *p)
 #endif
 
 	/* Verify we recognize this pack file format. */
-	if (p_read(p->mwf.fd, &hdr, sizeof(hdr)) < 0 ||
+	if (p_read(fd, &hdr, sizeof(hdr)) < 0 ||
 		hdr.hdr_signature != htonl(PACK_SIGNATURE) ||
 		!pack_version_ok(hdr.hdr_version))
 		goto cleanup;
 
 	/* Verify the pack matches its index. */
 	if (p->num_objects != ntohl(hdr.hdr_entries) ||
-	    p_pread(p->mwf.fd, checksum, p->oid_size, p->mwf.size - p->oid_size) < 0)
+	    p_pread(fd, checksum, p->oid_size, p->mwf.size - p->oid_size) < 0)
 		goto cleanup;
 
 	idx_checksum = ((unsigned char *)p->index_map.data) +
@@ -1144,14 +1151,14 @@ static int packfile_open_locked(struct git_pack_file *p)
 	if (git_mwindow_file_register(&p->mwf) < 0)
 		goto cleanup;
 
+	__atomic_store(&p->mwf.fd, &fd, __ATOMIC_RELEASE);
 	return 0;
 
 cleanup:
 	git_error_set(GIT_ERROR_OS, "invalid packfile '%s'", p->pack_name);
 
-	if (p->mwf.fd >= 0)
-		p_close(p->mwf.fd);
-	p->mwf.fd = -1;
+	if (fd >= 0)
+		p_close(fd);
 
 	return -1;
 }
@@ -1621,6 +1628,7 @@ int git_pack_entry_find(
 	off64_t offset;
 	git_oid found_oid;
 	int error;
+	int fd;
 
 	GIT_ASSERT_ARG(p);
 
@@ -1650,7 +1658,9 @@ int git_pack_entry_find(
 	/* we found a unique entry in the index;
 	 * make sure the packfile backing the index
 	 * still exists on disk */
-	if (p->mwf.fd == -1)
+
+	__atomic_load(&p->mwf.fd, &fd, __ATOMIC_ACQUIRE);
+	if (fd == -1)
 		error = packfile_open_locked(p);
 	git_mutex_unlock(&p->mwf.lock);
 	git_mutex_unlock(&p->lock);

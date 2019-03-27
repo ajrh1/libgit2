@@ -222,7 +222,8 @@ int git_futils_readbuffer_updated(
 	git_str *out,
 	const char *path,
 	unsigned char checksum[GIT_HASH_SHA256_SIZE],
-	int *updated)
+	int *updated,
+	bool quiet)
 {
 	int error;
 	git_file fd;
@@ -237,8 +238,7 @@ int git_futils_readbuffer_updated(
 		*updated = 0;
 
 	if (p_stat(path, &st) < 0)
-		return git_fs_path_set_error(errno, path, "stat");
-
+		return errno == ENOENT && quiet ? GIT_ENOTFOUND : git_fs_path_set_error(errno, path, "stat");
 
 	if (S_ISDIR(st.st_mode)) {
 		git_error_set(GIT_ERROR_INVALID, "requested file is a directory");
@@ -297,7 +297,7 @@ int git_futils_readbuffer_updated(
 
 int git_futils_readbuffer(git_str *buf, const char *path)
 {
-	return git_futils_readbuffer_updated(buf, path, NULL, NULL);
+	return git_futils_readbuffer_updated(buf, path, NULL, NULL, false);
 }
 
 int git_futils_writebuffer(

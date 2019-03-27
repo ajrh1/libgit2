@@ -22,11 +22,14 @@
  * Read whole files into an in-memory buffer for processing
  */
 extern int git_futils_readbuffer(git_str *obj, const char *path);
+
+/* if quiet is true, doesn't set error when returning GIT_ENOTFOUND */
 extern int git_futils_readbuffer_updated(
 	git_str *obj,
 	const char *path,
 	unsigned char checksum[GIT_HASH_SHA256_SIZE],
-	int *updated);
+	int *updated,
+	bool quiet);
 extern int git_futils_readbuffer_fd_full(git_str *obj, git_file fd);
 extern int git_futils_readbuffer_fd(git_str *obj, git_file fd, size_t len);
 

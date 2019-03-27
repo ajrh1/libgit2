@@ -118,7 +118,7 @@ int git_grafts_refresh(git_grafts *grafts)
 		return 0;
 
 	if ((error = git_futils_readbuffer_updated(&contents, grafts->path,
-				grafts->path_checksum, &updated)) < 0) {
+				grafts->path_checksum, &updated, false)) < 0) {
 
 		if (error == GIT_ENOTFOUND) {
 			git_grafts_clear(grafts);
