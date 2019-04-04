@@ -1686,8 +1686,9 @@ bool git_fs_path_str_is_valid_ext(
 	const char *start, *c;
 	size_t len = 0;
 
-	if (!flags)
+	if (flags == GIT_FS_PATH_REJECT_NOTHING)
 		return true;
+	assert(!(flags & GIT_FS_PATH_REJECT_NOTHING));
 
 	for (start = c = path->ptr; *c && len < path->size; c++, len++) {
 		if (!validate_char(*c, flags))

@@ -517,7 +517,7 @@ GIT_EXTERN(int) git_index_entry_is_conflict(const git_index_entry *entry);
  * @param index The index to iterate
  * @return 0 or an error code.
  */
-GIT_EXTERN(int) git_index_iterator_new(
+GIT_EXTERN(int) git_index_iterator_new_testonly(
 	git_index_iterator **iterator_out,
 	git_index *index);
 
@@ -537,7 +537,7 @@ GIT_EXTERN(int) git_index_iterator_next(
  *
  * @param iterator The iterator to free
  */
-GIT_EXTERN(void) git_index_iterator_free(git_index_iterator *iterator);
+GIT_EXTERN(void) git_index_iterator_free_testonly(git_index_iterator *iterator);
 
 /**@}*/
 

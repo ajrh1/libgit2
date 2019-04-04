@@ -624,8 +624,11 @@ extern int git_fs_path_from_url_or_path(git_str *local_path_out, const char *url
 #define GIT_FS_PATH_REJECT_DOS_PATHS          (1 << 7)
 #define GIT_FS_PATH_REJECT_NT_CHARS           (1 << 8)
 #define GIT_FS_PATH_REJECT_LONG_PATHS         (1 << 9)
+#define GIT_FS_PATH_REJECT_NOTHING            (1 << 10)
 
-#define GIT_FS_PATH_REJECT_MAX                (1 << 9)
+#define GIT_FS_PATH_REJECT_MAX                (1 << 10)
+
+/* If set, no other GIT_FS_PATH_REJECT are allowed to be set */
 
 /* Default path safety for writing files to disk: since we use the
  * Win32 "File Namespace" APIs ("\\?\") we need to protect from

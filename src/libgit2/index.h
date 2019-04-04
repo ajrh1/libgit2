@@ -131,11 +131,12 @@ extern int git_index__open(
 	const char *index_path,
 	git_oid_t oid_type);
 
-/* Copy the current entries vector *and* increment the index refcount.
+/* Make a shallow copy of the current entries vector *and* increment the index refcount.
+ * The vector is guaranteed to be sorted. It is illegal to mutate it.
  * Call `git_index__release_snapshot` when done.
  */
 extern int git_index_snapshot_new(git_vector *snap, git_index *index);
-extern void git_index_snapshot_release(git_vector *snap, git_index *index);
+extern void git_index_snapshot_release(git_index *index);
 
 /* Allow searching in a snapshot; entries must already be sorted! */
 extern int git_index_snapshot_find(
