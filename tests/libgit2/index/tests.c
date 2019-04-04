@@ -1094,7 +1094,7 @@ void test_index_tests__can_iterate(void)
 	int ret;
 
 	cl_git_pass(git_index__open(&index, TEST_INDEX_PATH, GIT_OID_SHA1));
-	cl_git_pass(git_index_iterator_new(&iterator, index));
+	cl_git_pass(git_index_iterator_new_testonly(&iterator, index));
 
 	cl_assert(git_vector_is_sorted(&iterator->snap));
 
@@ -1123,7 +1123,7 @@ void test_index_tests__can_iterate(void)
 
 	cl_assert_equal_i(found, ARRAY_SIZE(test_entries));
 
-	git_index_iterator_free(iterator);
+	git_index_iterator_free_testonly(iterator);
 	git_index_free(index);
 }
 
@@ -1137,7 +1137,7 @@ void test_index_tests__can_modify_while_iterating(void)
 	int ret;
 
 	cl_git_pass(git_index__open(&index, TEST_INDEX_PATH, GIT_OID_SHA1));
-	cl_git_pass(git_index_iterator_new(&iterator, index));
+	cl_git_pass(git_index_iterator_new_testonly(&iterator, index));
 
 	expected = git_index_entrycount(index);
 	cl_assert(git_vector_is_sorted(&iterator->snap));
@@ -1168,6 +1168,6 @@ void test_index_tests__can_modify_while_iterating(void)
 
 	cl_assert_equal_i(expected, seen);
 
-	git_index_iterator_free(iterator);
+	git_index_iterator_free_testonly(iterator);
 	git_index_free(index);
 }
