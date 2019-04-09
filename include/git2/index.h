@@ -299,6 +299,8 @@ GIT_EXTERN(int) git_index_entry_newer_than_index(
 		const git_index_entry *entry, git_index *index);
 
 GIT_EXTERN(int) git_index_is_case_sensitive(const git_index *index);
+GIT_EXTERN(int) git_index_is_filemode_trustworthy(const git_index *index);
+GIT_EXTERN(int) git_index_supports_symlinks(const git_index *index);
 
 /**
  * Write an existing index object from memory back to disk

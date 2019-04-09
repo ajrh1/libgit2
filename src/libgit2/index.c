@@ -775,6 +775,14 @@ int git_index_is_case_sensitive(const git_index *index) {
 	return !index->ignore_case;
 }
 
+int git_index_is_filemode_trustworthy(const git_index *index) {
+	return !index->distrust_filemode;
+}
+
+int git_index_supports_symlinks(const git_index *index) {
+	return !index->no_symlinks;
+}
+
 int git_index_read_safely(git_index *index)
 {
 	if (git_index__enforce_unsaved_safety && index->dirty) {
