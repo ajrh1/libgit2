@@ -33,6 +33,7 @@ typedef struct {
 
 	uint32_t diffcaps;
 	bool index_updated;
+	uint32_t seen_delta_types;
 } git_diff_generated;
 
 static git_diff_delta *diff_delta__alloc(
@@ -73,6 +74,13 @@ static int diff_insert_delta(
 	const char *matched_pathspec)
 {
 	int error = 0;
+
+	diff->seen_delta_types |= 1 << (delta->status + 1);
+	if (DIFF_FLAG_IS_SET(diff, GIT_DIFF_EXEMPLARS)) {
+		/* this is an optimization; we could also handle other delta types in here */
+		if (delta->status == GIT_DELTA_UNTRACKED)
+			diff->base.opts.flags &= ~GIT_DIFF_INCLUDE_UNTRACKED & ~GIT_DIFF_RECURSE_UNTRACKED_DIRS;
+	}
 
 	if (diff->base.opts.notify_cb) {
 		error = diff->base.opts.notify_cb(
@@ -167,6 +175,10 @@ static int diff_delta__from_one(
 	if ((entry->flags & GIT_INDEX_ENTRY_VALID) != 0)
 		return 0;
 
+	if ((diff->seen_delta_types & (1 << (status + 1))) &&
+			DIFF_FLAG_IS_SET(diff, GIT_DIFF_EXEMPLARS))
+		return 0;
+
 	if (status == GIT_DELTA_IGNORED &&
 		DIFF_FLAG_ISNT_SET(diff, GIT_DIFF_INCLUDE_IGNORED))
 		return 0;
@@ -234,6 +246,10 @@ static int diff_delta__from_two(
 	git_oid_t oid_type;
 
 	oid_type = diff->base.opts.oid_type;
+
+	if ((diff->seen_delta_types & (1 << (status + 1))) &&
+			DIFF_FLAG_IS_SET(diff, GIT_DIFF_EXEMPLARS))
+		return 0;
 
 	if (status == GIT_DELTA_UNMODIFIED &&
 		DIFF_FLAG_ISNT_SET(diff, GIT_DIFF_INCLUDE_UNMODIFIED))
@@ -475,6 +491,8 @@ static git_diff_generated *diff_generated_alloc(
 		&diff->base,
 		git_iterator_ignore_case(old_iter) ||
 		git_iterator_ignore_case(new_iter));
+
+	diff->seen_delta_types = 0;
 
 	return diff;
 }

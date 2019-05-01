@@ -170,7 +170,12 @@ typedef enum {
 	/** Include the necessary deflate / delta information so that `git-apply`
 	 *  can apply given diff information to binary files.
 	 */
-	GIT_DIFF_SHOW_BINARY = (1u << 30)
+	GIT_DIFF_SHOW_BINARY = (1u << 30),
+
+	/** Change the way the result of git_diff_notify_cb is interpreted.
+	 *  See comments above git_diff_notify_cb.
+	 */
+	GIT_DIFF_EXEMPLARS = (1 << 31)
 } git_diff_option_t;
 
 /**
