@@ -75,24 +75,30 @@ static int diff_insert_delta(
 {
 	int error = 0;
 
-	diff->seen_delta_types |= 1 << (delta->status + 1);
-	if (DIFF_FLAG_IS_SET(diff, GIT_DIFF_EXEMPLARS)) {
-		/* this is an optimization; we could also handle other delta types in here */
-		if (delta->status == GIT_DELTA_UNTRACKED)
-			diff->base.opts.flags &= ~GIT_DIFF_INCLUDE_UNTRACKED & ~GIT_DIFF_RECURSE_UNTRACKED_DIRS;
-	}
-
 	if (diff->base.opts.notify_cb) {
 		error = diff->base.opts.notify_cb(
 			&diff->base, delta, matched_pathspec, diff->base.opts.payload);
 
-		if (error) {
+		if (error < 0) {  /* negative value means to cancel diff */
 			git__free(delta);
+			return git_error_set_after_callback_function(error, "git_diff");
+		}
 
-			if (error > 0)	/* positive value means to skip this delta */
+		if (DIFF_FLAG_IS_SET(diff, GIT_DIFF_EXEMPLARS)) {
+			if (error & GIT_DIFF_DELTA_SKIP_TYPE) {
+				diff->seen_delta_types |= 1 << (delta->status + 1);
+				/* this is an optimization; we could also handle other delta types in here */
+				if (delta->status == GIT_DELTA_UNTRACKED)
+					diff->base.opts.flags &= ~GIT_DIFF_INCLUDE_UNTRACKED & ~GIT_DIFF_RECURSE_UNTRACKED_DIRS;
+			}
+			if (error & GIT_DIFF_DELTA_DO_NOT_INSERT) {
+				git__free(delta);
 				return 0;
-			else			/* negative value means to cancel diff */
-				return git_error_set_after_callback_function(error, "git_diff");
+			}
+		} else if (error) {
+			/* positive value means to skip this delta */
+			git__free(delta);
+				return 0;
 		}
 	}
 
