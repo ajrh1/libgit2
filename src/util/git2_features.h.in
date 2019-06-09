@@ -13,6 +13,7 @@
 
 #cmakedefine GIT_USE_ICONV 1
 #cmakedefine GIT_USE_NSEC 1
+#cmakedefine GIT_ZERO_NSEC 1
 #cmakedefine GIT_USE_STAT_MTIM 1
 #cmakedefine GIT_USE_STAT_MTIMESPEC 1
 #cmakedefine GIT_USE_STAT_MTIME_NSEC 1

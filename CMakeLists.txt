@@ -28,6 +28,7 @@ option(BUILD_FUZZERS           "Build the fuzz targets"                         
 # Suggested functionality that may not be available on a per-platform basis
 option(USE_THREADS             "Use threads for parallel processing when possible"      ON)
 option(USE_NSEC                "Support nanosecond precision file mtimes and ctimes"    ON)
+	OPTION(ZERO_NSEC               "Hint that index produced by the 'git' binary may have zero nsec components in all timestamps"  OFF)
 
 # Backend selection
 option(USE_SSH                 "Enable SSH support. Can be set to a specific backend" OFF)

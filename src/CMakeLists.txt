@@ -114,6 +114,11 @@ if(USE_NSEC)
 	set(GIT_USE_NSEC 1)
 endif()
 
+	IF (ZERO_NSEC)
+	SET(GIT_ZERO_NSEC 1)
+ENDIF()
+	ADD_FEATURE_INFO(zero-nsec GIT_ZERO_NSEC "expect truncated timestamps in the index (workaround for Alpine Linux bugs)")
+
 # high-resolution stat support
 
 if(HAVE_STRUCT_STAT_ST_MTIM)
