@@ -43,6 +43,7 @@ struct git_index {
 	unsigned int ignore_case:1;
 	unsigned int distrust_filemode:1;
 	unsigned int no_symlinks:1;
+	unsigned int precompose_unicode:1;
 	unsigned int dirty:1;	/* whether we have unsaved changes */
 
 	git_tree_cache *tree;

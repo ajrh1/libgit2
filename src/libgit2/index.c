@@ -627,11 +627,14 @@ int git_index_set_caps(git_index *index, int caps)
 			index->distrust_filemode = (val == 0);
 		if (!git_repository__configmap_lookup(&val, repo, GIT_CONFIGMAP_SYMLINKS))
 			index->no_symlinks = (val == 0);
+		if (!git_repository__configmap_lookup(&val, repo, GIT_CONFIGMAP_PRECOMPOSE))
+			index->precompose_unicode = (val != 0);
 	}
 	else {
 		index->ignore_case = ((caps & GIT_INDEX_CAPABILITY_IGNORE_CASE) != 0);
 		index->distrust_filemode = ((caps & GIT_INDEX_CAPABILITY_NO_FILEMODE) != 0);
 		index->no_symlinks = ((caps & GIT_INDEX_CAPABILITY_NO_SYMLINKS) != 0);
+		index->precompose_unicode = ((caps & GIT_INDEX_CAPABILITY_PRECOMPOSE_UNICODE) != 0);
 	}
 
 	if (old_ignore_case != index->ignore_case) {
@@ -645,7 +648,8 @@ int git_index_caps(const git_index *index)
 {
 	return ((index->ignore_case ? GIT_INDEX_CAPABILITY_IGNORE_CASE : 0) |
 			(index->distrust_filemode ? GIT_INDEX_CAPABILITY_NO_FILEMODE : 0) |
-			(index->no_symlinks ? GIT_INDEX_CAPABILITY_NO_SYMLINKS : 0));
+			(index->no_symlinks ? GIT_INDEX_CAPABILITY_NO_SYMLINKS : 0) |
+			(index->precompose_unicode ? GIT_INDEX_CAPABILITY_PRECOMPOSE_UNICODE : 0));
 }
 
 #ifndef GIT_DEPRECATE_HARD
@@ -781,6 +785,10 @@ int git_index_is_filemode_trustworthy(const git_index *index) {
 
 int git_index_supports_symlinks(const git_index *index) {
 	return !index->no_symlinks;
+}
+
+int git_index_precompose_unicode(const git_index *index) {
+	return index->precompose_unicode;
 }
 
 int git_index_read_safely(git_index *index)

@@ -127,6 +127,7 @@ typedef enum {
 	GIT_INDEX_CAPABILITY_IGNORE_CASE = 1,
 	GIT_INDEX_CAPABILITY_NO_FILEMODE = 2,
 	GIT_INDEX_CAPABILITY_NO_SYMLINKS = 4,
+	GIT_INDEX_CAPABILITY_PRECOMPOSE_UNICODE = 8,
 	GIT_INDEX_CAPABILITY_FROM_OWNER  = -1
 } git_index_capability_t;
 
@@ -301,6 +302,7 @@ GIT_EXTERN(int) git_index_entry_newer_than_index(
 GIT_EXTERN(int) git_index_is_case_sensitive(const git_index *index);
 GIT_EXTERN(int) git_index_is_filemode_trustworthy(const git_index *index);
 GIT_EXTERN(int) git_index_supports_symlinks(const git_index *index);
+GIT_EXTERN(int) git_index_precompose_unicode(const git_index *index);
 
 /**
  * Write an existing index object from memory back to disk
