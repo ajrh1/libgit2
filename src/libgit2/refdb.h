@@ -12,6 +12,8 @@
 #include "git2/refdb.h"
 #include "repository.h"
 
+extern bool git_refdb__disable_reading_packed_tags;
+
 struct git_refdb {
 	git_refcount rc;
 	git_repository *repo;

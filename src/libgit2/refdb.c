@@ -20,6 +20,8 @@
 #define DEFAULT_NESTING_LEVEL	5
 #define MAX_NESTING_LEVEL		10
 
+bool git_refdb__disable_reading_packed_tags = false;
+
 int git_refdb_new(git_refdb **out, git_repository *repo)
 {
 	git_refdb *db;
