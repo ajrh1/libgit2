@@ -66,6 +66,25 @@ int git_strmap_set(git_strmap *map, const char *key, void *value)
 	return 0;
 }
 
+int git_strmap_upsert_raw(git_strmap *map, const char *key, const char*** k, void*** v) {
+	size_t idx;
+	int rval;
+
+	idx = kh_put(str, map, key, &rval);
+	if (rval < 0)
+		return -1;
+
+	*k = &kh_key(map, idx);
+	*v = &kh_val(map, idx);
+
+	if (rval != 0) {
+		**k = 0;
+		**v = 0;
+	}
+
+	return 0;
+}
+
 int git_strmap_delete(git_strmap *map, const char *key)
 {
 	khiter_t idx = kh_get(str, map, key);

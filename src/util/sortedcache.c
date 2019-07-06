@@ -274,19 +274,20 @@ int git_sortedcache_upsert(void **out, git_sortedcache *sc, const char *key)
 {
 	size_t keylen, itemlen;
 	int error = 0;
-	char *item_key;
-	void *item;
+	const char **k;
+	void **v;
 
-	if ((item = git_strmap_get(sc->map, key)) != NULL)
+	if ((error = git_strmap_upsert_raw(sc->map, key, &k, &v)) < 0 || *k)
 		goto done;
 
 	keylen  = strlen(key);
 	itemlen = sc->item_path_offset + keylen + 1;
 	itemlen = (itemlen + 7) & ~7;
 
-	if ((item = git_pool_mallocz(&sc->pool, itemlen)) == NULL) {
+	if ((*v = git_pool_malloc(&sc->pool, itemlen)) == NULL) {
 		/* don't use GIT_ERROR_CHECK_ALLOC b/c of lock */
 		error = -1;
+		git_strmap_delete(sc->map, key);
 		goto done;
 	}
 
@@ -294,18 +295,14 @@ int git_sortedcache_upsert(void **out, git_sortedcache *sc, const char *key)
 	 * fail, there is no way to free the pool item so we just abandon it
 	 */
 
-	item_key = ((char *)item) + sc->item_path_offset;
-	memcpy(item_key, key, keylen);
+	*k = memcpy(((char *)*v) + sc->item_path_offset, key, keylen + 1);
 
-	if ((error = git_strmap_set(sc->map, item_key, item)) < 0)
-		goto done;
-
-	if ((error = git_vector_insert(&sc->items, item)) < 0)
-		git_strmap_delete(sc->map, item_key);
+	if ((error = git_vector_insert(&sc->items, *v)) < 0)
+		git_strmap_delete(sc->map, key);
 
 done:
 	if (out)
-		*out = !error ? item : NULL;
+		*out = error ? NULL : *v;
 	return error;
 }
 

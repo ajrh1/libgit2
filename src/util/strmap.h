@@ -118,6 +118,14 @@ int git_strmap_exists(git_strmap *map, const char *key);
  */
 int git_strmap_iterate(void **value, git_strmap *map, size_t *iter, const char **key);
 
+/**
+ * Find or insert an entry.
+ * 
+ * *k and *v are set to the address of the key and value respectively.
+ * If the entry didn't exist (and was just created) existed, **k and **v are null.
+ */
+int git_strmap_upsert_raw(git_strmap *map, const char *key, const char*** k, void*** v);
+
 #define git_strmap_foreach(h, kvar, vvar, code) { size_t __i = 0;		\
 	while (git_strmap_iterate((void **) &(vvar), h, &__i, &(kvar)) == 0) {	\
 		code;								\
