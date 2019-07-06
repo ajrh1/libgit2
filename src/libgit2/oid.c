@@ -110,8 +110,22 @@ int git_oid_fromstrp(git_oid *out, const char *str)
 
 int git_oid_fromstr(git_oid *out, const char *str)
 {
-	return git_oid__fromstrn(out, str, GIT_OID_SHA1_HEXSIZE, GIT_OID_SHA1);
+	int mask = 0, v;
+	unsigned char* oid = out->id, *end = oid + GIT_OID_SHA1_SIZE;
+
+	do {
+		v = git__fromhex(str[0]) << 4 | git__fromhex(str[1]);
+		mask |= v;
+		*oid++ = v;
+		str += 2;
+	} while (oid != end);
+
+	if (mask < 0)
+		return oid_error_invalid("contains invalid characters");
+
+	return 0;
 }
+
 #endif
 
 int git_oid_nfmt(char *str, size_t n, const git_oid *oid)
