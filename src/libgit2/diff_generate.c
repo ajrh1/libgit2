@@ -160,8 +160,6 @@ static bool diff_delta__test(
 		const git_index_entry *entry,
 		const char **matched_pathspec)
 {
-	const char *match;
-
 	if ((entry->flags & GIT_INDEX_ENTRY_VALID) != 0)
 		return false;
 
@@ -181,11 +179,8 @@ static bool diff_delta__test(
 			DIFF_FLAG_ISNT_SET(diff, GIT_DIFF_INCLUDE_UNREADABLE))
 		return false;
 
-	if (!diff_pathspec_match(&match, diff, entry))
+	if (matched_pathspec && !diff_pathspec_match(matched_pathspec, diff, entry))
 		return false;
-
-	if (matched_pathspec)
-		*matched_pathspec = match;
 
 	return true;
 }
@@ -1068,15 +1063,21 @@ static int handle_unmatched_new_item(
 		delta_type = GIT_DELTA_IGNORED;
 
 	if (nitem->mode == GIT_FILEMODE_TREE) {
-		bool recurse_into_dir = contains_oitem ||
+		bool recurse_into_dir;
+		const char* dummy;
+
+		if (!contains_oitem && !diff_delta__test(diff, delta_type, nitem, NULL)) {
+			return iterator_advance(&info->nitem, info->new_iter);
+		}
+
+		recurse_into_dir = contains_oitem ||
 			(delta_type == GIT_DELTA_UNTRACKED &&
 			 DIFF_FLAG_IS_SET(diff, GIT_DIFF_RECURSE_UNTRACKED_DIRS)) ||
 			(delta_type == GIT_DELTA_IGNORED &&
 			 DIFF_FLAG_IS_SET(diff, GIT_DIFF_RECURSE_IGNORED_DIRS)) ||
 			(delta_type == GIT_DELTA_UNTRACKED &&
 			 info->new_iter->type == GIT_ITERATOR_WORKDIR &&
-			 info->new_iter->start_len &&
-			 info->new_iter->prefixcomp(nitem->path, info->new_iter->start) < 0);
+			 !diff_pathspec_match(&dummy, diff, nitem));
 
 		/* do not advance into directories that contain a .git file */
 		if (recurse_into_dir && !contains_oitem) {
@@ -1097,12 +1098,7 @@ static int handle_unmatched_new_item(
 			DIFF_FLAG_ISNT_SET(diff, GIT_DIFF_ENABLE_FAST_UNTRACKED_DIRS))
 		{
 			git_iterator_status_t untracked_state;
-			git_index_entry entry;
-
-			if (!diff_delta__test(diff, delta_type, nitem, NULL))
-				return iterator_advance(&info->nitem, info->new_iter);
-
-			entry = *nitem;
+			git_index_entry entry = *nitem;
 
 			/* iterate into dir looking for an actual untracked file */
 			if ((error = iterator_advance_over(
