@@ -866,6 +866,9 @@ static int maybe_modified(
 			 !git_oid_is_zero(&oitem->id)) {
 		status = GIT_DELTA_UNMODIFIED;
 
+	} else if ((oitem->flags_extended & GIT_INDEX_ENTRY_INTENT_TO_ADD) && new_is_workdir) {
+		status = GIT_DELTA_ADDED;
+
 	/* if we have an unknown OID and a workdir iterator, then check some
 	 * circumstances that can accelerate things or need special handling
 	 */
@@ -1269,6 +1272,12 @@ int git_diff__from_iterators(
 	/* run iterators building diffs */
 	while (!error && (info.oitem || info.nitem)) {
 		int cmp;
+
+		if (new_iter->type == GIT_ITERATOR_TYPE_INDEX &&
+				(info.nitem->flags_extended & GIT_INDEX_ENTRY_INTENT_TO_ADD)) {
+			iterator_advance(&info.nitem, info.new_iter);
+			continue;
+		}
 
 		/* report progress */
 		if (opts && opts->progress_cb) {
