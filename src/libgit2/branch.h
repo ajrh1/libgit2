@@ -28,4 +28,11 @@ int git_branch__upstream_name(
 	git_repository *repo,
 	const char *canonical_branch_name);
 
+/* the same as git_branch_name but also gives git_remote */
+int git_branch__remote(
+	git_remote** remote_out,
+	git_str* name_out,
+	git_repository *repo,
+	const char *refname);
+
 #endif

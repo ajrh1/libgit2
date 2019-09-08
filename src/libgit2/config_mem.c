@@ -284,6 +284,12 @@ static void config_memory_free(git_config_backend *_backend)
 	git__free(backend);
 }
 
+static int config_memory_refresh(git_config_backend *cfg)
+{
+	(void)cfg;
+	return 0;
+}
+
 static config_memory_backend *config_backend_new(
 	git_config_backend_memory_options *opts)
 {
@@ -307,6 +313,7 @@ static config_memory_backend *config_backend_new(
 	backend->parent.lock = config_memory_lock;
 	backend->parent.unlock = config_memory_unlock;
 	backend->parent.snapshot = git_config_backend_snapshot;
+	backend->parent.refresh = config_memory_refresh;
 	backend->parent.free = config_memory_free;
 
 	backend->backend_type = git__strdup(opts && opts->backend_type ?

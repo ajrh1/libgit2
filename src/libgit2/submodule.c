@@ -2141,6 +2141,9 @@ static int gitmodules_snapshot(git_config **snap, git_repository *repo)
 		goto cleanup;
 	git_str_dispose(&path);
 
+	if ((error = git_config_refresh(mods)) < 0)
+		goto cleanup;
+
 	if ((error = git_config_snapshot(snap, mods)) < 0)
 		goto cleanup;
 

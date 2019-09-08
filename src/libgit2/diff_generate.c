@@ -514,7 +514,7 @@ static int diff_generated_apply_options(
 		diff->base.opts.flags |= GIT_DIFF_INCLUDE_UNTRACKED;
 
 	/* load config values that affect diff behavior */
-	if ((val = git_repository_config_snapshot(&cfg, repo)) < 0)
+	if ((val = git_repository_config(&cfg, repo)) < 0)
 		return val;
 
 	if (!git_config__configmap_lookup(&val, cfg, GIT_CONFIGMAP_SYMLINKS) && val)

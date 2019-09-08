@@ -192,6 +192,13 @@ GIT_EXTERN(int) git_branch_name(
 		const char **out,
 		const git_reference *ref);
 
+/* the same as git_branch_name but also gives git_remote */
+GIT_EXTERN(int) git_branch_remote(
+		git_remote** remote_out,
+		git_buf* name_out,
+		git_repository *repo,
+		const char *refname);
+
 /**
  * Get the upstream of a branch
  *

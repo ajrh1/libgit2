@@ -332,6 +332,8 @@ GIT_EXTERN(int) git_config_set_writeorder(
  */
 GIT_EXTERN(int) git_config_snapshot(git_config **out, git_config *config);
 
+GIT_EXTERN(int) git_config_refresh(git_config *config);
+
 /**
  * Free the configuration and its associated memory and files
  *

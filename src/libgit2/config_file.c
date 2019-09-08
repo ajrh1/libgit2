@@ -270,20 +270,7 @@ static int config_file_iterator(
 	struct git_config_backend *backend)
 {
 	config_file_backend *b = GIT_CONTAINER_OF(backend, config_file_backend, parent);
-	git_config_list *dupped = NULL, *config_list = NULL;
-	int error;
-
-	if ((error = config_file_refresh(backend)) < 0 ||
-	    (error = config_file_take_list(&config_list, b)) < 0 ||
-	    (error = git_config_list_dup(&dupped, config_list)) < 0 ||
-	    (error = git_config_list_iterator_new(iter, dupped)) < 0)
-		goto out;
-
-out:
-	/* Let iterator delete duplicated config_list when it's done */
-	git_config_list_free(config_list);
-	git_config_list_free(dupped);
-	return error;
+	return git_config_list_iterator_new(iter, b->config_list);
 }
 
 static int config_file_snapshot(git_config_backend **out, git_config_backend *backend)
@@ -342,9 +329,6 @@ static int config_file_get(git_config_backend *cfg, const char *key, git_config_
 	git_config_list *config_list = NULL;
 	git_config_list_entry *entry;
 	int error = 0;
-
-	if (!h->parent.readonly && ((error = config_file_refresh(cfg)) < 0))
-		return error;
 
 	if ((error = config_file_take_list(&config_list, h)) < 0)
 		return error;
@@ -510,6 +494,7 @@ int git_config_backend_from_file(git_config_backend **out, const char *path)
 	backend->parent.snapshot = config_file_snapshot;
 	backend->parent.lock = config_file_lock;
 	backend->parent.unlock = config_file_unlock;
+	backend->parent.refresh = config_file_refresh;
 	backend->parent.free = config_file_free;
 
 	*out = (git_config_backend *)backend;

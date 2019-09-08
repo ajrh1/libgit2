@@ -81,6 +81,7 @@ struct git_config_backend {
 	 * back.
 	 */
 	int GIT_CALLBACK(unlock)(struct git_config_backend *, int success);
+	int GIT_CALLBACK(refresh)(struct git_config_backend *);
 	void GIT_CALLBACK(free)(struct git_config_backend *);
 };
 #define GIT_CONFIG_BACKEND_VERSION 1

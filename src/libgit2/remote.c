@@ -234,7 +234,7 @@ int git_remote_create_with_opts(git_remote **out, const char *url, const git_rem
 	}
 
 	if (opts->repository) {
-		if ((error = git_repository_config_snapshot(&config_ro, opts->repository)) < 0)
+		if ((error = git_repository_config(&config_ro, opts->repository)) < 0)
 			goto on_error;
 	}
 
@@ -474,7 +474,7 @@ int git_remote_lookup(git_remote **out, git_repository *repo, const char *name)
 	if ((error = ensure_remote_name_is_valid(name)) < 0)
 		return error;
 
-	if ((error = git_repository_config_snapshot(&config, repo)) < 0)
+	if ((error = git_repository_config(&config, repo)) < 0)
 		return error;
 
 	remote = git__calloc(1, sizeof(git_remote));

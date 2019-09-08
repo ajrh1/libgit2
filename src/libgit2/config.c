@@ -213,6 +213,20 @@ int git_config_snapshot(git_config **out, git_config *in)
 	return error;
 }
 
+int git_config_refresh(git_config *config)
+{
+	size_t i;
+	int error;
+	backend_entry *entry;
+	git_vector_foreach(&config->readers, i, entry) {
+		if (!entry->instance || !entry->instance->backend)
+			continue;
+		if ((error = entry->instance->backend->refresh(entry->instance->backend)) < 0)
+			return error;
+	}
+	return 0;
+}
+
 static int find_backend_by_level(
 	backend_instance **out,
 	const git_config *config,
@@ -889,21 +903,6 @@ int git_config_get_bool(int *out, const git_config *config, const char *name)
 	return ret;
 }
 
-static int is_readonly(const git_config *config)
-{
-	backend_entry *entry;
-	size_t i;
-
-	git_vector_foreach(&config->writers, i, entry) {
-		GIT_ASSERT(entry->instance && entry->instance->backend);
-
-		if (!entry->instance->backend->readonly)
-			return 0;
-	}
-
-	return 1;
-}
-
 static int git_config__parse_path(git_str *out, const char *value)
 {
 	GIT_ASSERT_ARG(out);
@@ -956,11 +955,6 @@ int git_config_get_string(
 {
 	git_config_entry *entry;
 	int ret;
-
-	if (!is_readonly(config)) {
-		git_error_set(GIT_ERROR_CONFIG, "get_string called on a live config object");
-		return -1;
-	}
 
 	ret = get_entry(&entry, config, name, true, GET_ALL_ERRORS);
 	*out = !ret ? (entry->value ? entry->value : "") : NULL;

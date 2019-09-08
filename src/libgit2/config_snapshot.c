@@ -165,6 +165,12 @@ out:
 	return error;
 }
 
+static int config_snapshot_refresh(git_config_backend *cfg)
+{
+	(void)cfg;
+	return 0;
+}
+
 int git_config_backend_snapshot(git_config_backend **out, git_config_backend *source)
 {
 	config_snapshot_backend *backend;
@@ -189,6 +195,7 @@ int git_config_backend_snapshot(git_config_backend **out, git_config_backend *so
 	backend->parent.iterator = config_snapshot_iterator;
 	backend->parent.lock = config_snapshot_lock;
 	backend->parent.unlock = config_snapshot_unlock;
+	backend->parent.refresh = config_snapshot_refresh;
 	backend->parent.free = config_snapshot_free;
 
 	*out = &backend->parent;
