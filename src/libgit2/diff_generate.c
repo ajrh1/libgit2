@@ -889,8 +889,14 @@ static int maybe_modified(
 		 */
 		else if (omode != nmode || oitem->file_size != nitem->file_size) {
 			status = GIT_DELTA_MODIFIED;
-			modified_uncertain =
-				(oitem->file_size <= 0 && nitem->file_size > 0);
+			/* NOTE(romka): Force modified_uncertain to be false if file size has changed.
+			// This optimization breaks code that mutates index (gitstatusd doesn't).
+			//
+			// !!! DANGER !!! DO NOT UPSTREAM THIS CHANGE !!!
+			//
+			// modified_uncertain =
+			// 	(oitem->file_size <= 0 && nitem->file_size > 0);
+			 */
 		}
 		else if (!git_index_time_eq(&oitem->mtime, &nitem->mtime) ||
 			(use_ctime && !git_index_time_eq(&oitem->ctime, &nitem->ctime)) ||
