@@ -1279,7 +1279,7 @@ int git_diff__from_iterators(
 	while (!error && (info.oitem || info.nitem)) {
 		int cmp;
 
-		if (new_iter->type == GIT_ITERATOR_TYPE_INDEX &&
+		if (new_iter->type == GIT_ITERATOR_INDEX && info.nitem &&
 				(info.nitem->flags_extended & GIT_INDEX_ENTRY_INTENT_TO_ADD)) {
 			iterator_advance(&info.nitem, info.new_iter);
 			continue;
