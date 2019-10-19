@@ -1090,7 +1090,7 @@ static int filesystem_iterator_entry_cmp_icase(const void *_a, const void *_b)
 	return git__strcasecmp(a->basename, b->basename);
 }
 
-#define FILESYSTEM_MAX_DEPTH 100
+#define FILESYSTEM_MAX_DEPTH 2049
 
 /**
  * Figure out if an entry is a submodule.
