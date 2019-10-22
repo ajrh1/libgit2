@@ -504,10 +504,10 @@ int git_branch__remote(
 			goto cleanup;
 		}
 
-		if (git_refspec__transform(&buf, refspec, git_str_cstr(&merge_name)) < 0)
+		if ((error = git_refspec__transform(&buf, refspec, git_str_cstr(&merge_name))) < 0)
 			goto cleanup;
 	} else
-		if (git_str_set(&buf, git_str_cstr(&merge_name), git_str_len(&merge_name)) < 0)
+		if ((error = git_str_set(&buf, git_str_cstr(&merge_name), git_str_len(&merge_name))) < 0)
 			goto cleanup;
 
 	git_str_swap(name_out, &buf);
