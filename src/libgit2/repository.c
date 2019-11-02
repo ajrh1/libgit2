@@ -745,8 +745,8 @@ static int find_repo_traverse(
 	git_str common_link = GIT_STR_INIT;
 	struct stat st;
 	dev_t initial_device = 0;
-	int min_iterations;
-	bool in_dot_git, is_valid;
+	int min_iterations = 1;
+	bool is_valid;
 	size_t ceiling_offset = 0;
 	int error;
 
@@ -755,33 +755,11 @@ static int find_repo_traverse(
 	if ((error = git_fs_path_prettify(&path, start_path, NULL)) < 0)
 		return error;
 
-	/*
-	 * In each loop we look first for a `.git` dir within the
-	 * directory, then to see if the directory itself is a repo.
-	 *
-	 * In other words: if we start in /a/b/c, then we look at:
-	 * /a/b/c/.git, /a/b/c, /a/b/.git, /a/b, /a/.git, /a
-	 *
-	 * With GIT_REPOSITORY_OPEN_BARE or GIT_REPOSITORY_OPEN_NO_DOTGIT,
-	 * we assume we started with /a/b/c.git and don't append .git the
-	 * first time through.  min_iterations indicates the number of
-	 * iterations left before going further counts as a search.
-	 */
-	if (flags & (GIT_REPOSITORY_OPEN_BARE | GIT_REPOSITORY_OPEN_NO_DOTGIT)) {
-		in_dot_git = true;
-		min_iterations = 1;
-	} else {
-		in_dot_git = false;
-		min_iterations = 2;
-	}
-
 	for (;;) {
 		if (!(flags & GIT_REPOSITORY_OPEN_NO_DOTGIT)) {
-			if (!in_dot_git) {
-				if ((error = git_str_joinpath(&path, path.ptr, DOT_GIT)) < 0)
-					goto out;
-			}
-			in_dot_git = !in_dot_git;
+			error = git_str_joinpath(&path, path.ptr, DOT_GIT);
+			if (error < 0)
+				break;
 		}
 
 		if (p_stat(path.ptr, &st) == 0) {
@@ -825,14 +803,13 @@ static int find_repo_traverse(
 			}
 		}
 
-		/*
-		 * Move up one directory. If we're in_dot_git, we'll
-		 * search the parent itself next. If we're !in_dot_git,
-		 * we'll search .git in the parent directory next (added
-		 * at the top of the loop).
-		 */
 		if ((error = git_fs_path_dirname_r(&path, path.ptr)) < 0)
 			goto out;
+		if (!(flags & GIT_REPOSITORY_OPEN_NO_DOTGIT) &&
+				git_fs_path_dirname_r(&path, path.ptr) < 0) {
+			error = -1;
+			goto out;
+		}
 
 		/*
 		 * Once we've checked the directory (and .git if
