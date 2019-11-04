@@ -1539,7 +1539,7 @@ static int git_submodule__open(
 {
 	int error;
 	git_str path = GIT_STR_INIT;
-	unsigned int flags = GIT_REPOSITORY_OPEN_NO_SEARCH;
+	unsigned int flags = GIT_REPOSITORY_OPEN_NO_SEARCH | GIT_REPOSITORY_OPEN_NO_DOTGIT;
 	const char *wd;
 
 	GIT_ASSERT_ARG(sm);
