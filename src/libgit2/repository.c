@@ -1238,16 +1238,49 @@ int git_repository_discover(
 	int across_fs,
 	const char *ceiling_dirs)
 {
-	struct repo_paths paths = { GIT_STR_INIT };
-	uint32_t flags = across_fs ? GIT_REPOSITORY_OPEN_CROSS_FS : 0;
+	return git_repository_discover_ex(
+			out, NULL, NULL, NULL, start_path,
+			across_fs ? GIT_REPOSITORY_OPEN_CROSS_FS : 0,
+			ceiling_dirs);
+}
+
+int git_repository_discover_ex(
+		git_buf *gitdir_path,
+		git_buf *workdir_path,
+		git_buf *gitlink_path,
+		git_buf *commondir_path,
+		const char *start_path,
+		uint32_t flags,
+		const char *ceiling_dirs)
+{
+	git_str gitdir_str = GIT_STR_INIT, *gitdir_p = gitdir_path ? &gitdir_str : 0;
+	git_str workdir_str = GIT_STR_INIT, *workdir_p = workdir_path ? &workdir_str : 0;
+	git_str gitlink_str = GIT_STR_INIT, *gitlink_p = gitlink_path ? &gitlink_str : 0;
+	git_str commondir_str = GIT_STR_INIT, *commondir_p = commondir_path ? &commondir_str : 0;
+
+	struct repo_paths paths = { gitdir_str, workdir_str, gitlink_str, commondir_str };
+
 	int error;
 
 	GIT_ASSERT_ARG(start_path);
 
-	if ((error = find_repo(&paths, start_path, ceiling_dirs, flags)) == 0)
-		error = git_buf_fromstr(out, &paths.gitdir);
+	error = find_repo(&paths, start_path, flags, ceiling_dirs);
 
-	repo_paths_dispose(&paths);
+	if (error == 0 && gitdir_p)
+		error = git_buf_fromstr(gitdir_path, &gitdir_str);
+	if (error == 0 && workdir_p)
+		error = git_buf_fromstr(workdir_path, &workdir_str);
+	if (error == 0 && gitlink_p)
+		error = git_buf_fromstr(gitlink_path, &gitlink_str);
+	if (error == 0 && commondir_p)
+		error = git_buf_fromstr(commondir_path, &commondir_str);
+
+
+	git_str_dispose(&gitdir_str);
+	git_str_dispose(&workdir_str);
+	git_str_dispose(&gitlink_str);
+	git_str_dispose(&commondir_str);
+
 	return error;
 }
 
