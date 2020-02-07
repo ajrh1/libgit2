@@ -35,4 +35,11 @@ int git_branch__remote(
 	git_repository *repo,
 	const char *refname);
 
+/* the same as remote_out but for branch.<name>.pushRemote */
+int git_branch__push_remote(
+	git_remote** remote_out,
+	git_str* name_out,
+	git_repository *repo,
+	const char *refname);
+
 #endif
