@@ -429,6 +429,9 @@ GIT_EXTERN(int) git_index_clear(git_index *index);
 GIT_EXTERN(const git_index_entry *) git_index_get_byindex(
 	git_index *index, size_t n);
 
+GIT_EXTERN(const git_index_entry *) git_index_get_byindex_no_sort(
+		git_index *index, size_t n);
+
 /**
  * Get a pointer to one of the entries in the index
  *

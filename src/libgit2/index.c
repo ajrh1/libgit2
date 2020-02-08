@@ -953,6 +953,12 @@ const git_index_entry *git_index_get_byindex(
 	return git_vector_get(&index->entries, n);
 }
 
+const git_index_entry *git_index_get_byindex_no_sort(
+		git_index *index, size_t n)
+{
+	return index->entries.contents[n];
+}
+
 const git_index_entry *git_index_get_bypath(
 	git_index *index, const char *path, int stage)
 {
