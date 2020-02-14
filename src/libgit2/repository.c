@@ -752,7 +752,10 @@ static int find_repo_traverse(
 
 	git_str_clear(&out->gitdir);
 
-	if ((error = git_fs_path_prettify(&path, start_path, NULL)) < 0)
+	error = flags & GIT_REPOSITORY_OPEN_NO_SEARCH
+		? git_fs_path_canonicalize(&path, start_path, NULL)
+		: git_fs_path_prettify(&path, start_path, NULL);
+	if (error < 0)
 		return error;
 
 	for (;;) {
