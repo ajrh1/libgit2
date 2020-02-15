@@ -789,7 +789,7 @@ static int find_repo_traverse(
 
 					break;
 				}
-			} else if (S_ISREG(st.st_mode) && git__suffixcmp(path.ptr, "/" DOT_GIT) == 0) {
+			} else if (S_ISREG(st.st_mode)) {
 				if ((error = read_gitfile(&repo_link, path.ptr)) < 0 ||
 				    (error = is_valid_repository_path(&is_valid, &repo_link, &common_link, flags)) < 0)
 					goto out;
