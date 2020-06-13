@@ -178,12 +178,19 @@ static int socket_connect(git_stream *stream)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = AF_UNSPEC;
 
+	/* DO NOT UPSTREAM! This is fine for gitstatus because it does not use network. */
+	git_error_set(GIT_ERROR_NET,
+			"failed to resolve address for %s: not supported", st->host);
+	return -1;
+
+	/*
 	if ((error = p_getaddrinfo(st->host, st->port, &hints, &info)) != 0) {
 		git_error_set(GIT_ERROR_NET,
 			   "failed to resolve address for %s: %s",
 			   st->host, p_gai_strerror(error));
 		return -1;
 	}
+	 */
 
 	for (p = info; p != NULL; p = p->ai_next) {
 		s = socket(p->ai_family, p->ai_socktype | SOCK_CLOEXEC, p->ai_protocol);
